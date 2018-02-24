@@ -10,6 +10,7 @@
 
 var mysql = require("mysql");
 var inquirer = require("inquirer");
+var Table = require("cli-table2");
 
 
 // create the connection information for the sql database
@@ -29,17 +30,35 @@ var connection = mysql.createConnection({
 connection.connect(function(err) {
   if (err) throw err;
   // run the start function after the connection is made to prompt the user
-  start();
+  displayProducts();
 });
 
 // function which prompts the user for what action they should take
+function displayProducts() {
+  var query = "SELECT * FROM products";
+  connection.query(query, function(err, results) {
+    
+    // instantiate 
+    var table = new Table({
+      head: ["Item number", "Product", "Price"], 
+      colWidths: [15, 30, 15]
+    });
+    
+    for (var i = 0; i < results.length; i++) {
+      table.push(
+        [results[i].item_id, results[i].product_name, "$" + results[i].price]
+      );
+    }
+    
+    console.log(table.toString());
+    
+  });
+}
+
 function start() {
   
   // query the database for all items being auctioned
-  connection.query("SELECT * FROM products", function(err, results) {
-    if (err) throw err;
-    // once you have the items, prompt the user for which they'd like to bid on
-    inquirer
+inquirer
     .prompt([
       {
         name: "choice",
@@ -78,56 +97,23 @@ function start() {
         var customerQuantity = answer.quantity;
         console.log(customerQuantity);
         console.log(answer);
+
+        var item = answer.choice;
+        var query = "SELECT * FROM products WHERE ?"
         
-        connection.query(
-          "SELECT ? FROM products WHERE ?", 
-          [
-            {
-              product_name: answer.choice
-            },
-            {
-              stock_quantity: customerQuantity
-            }
-          ],
-          function(error) {
-            if (error) throw err;
-            if (customerQuantity >= stock_quantity) {
-              stock_quantity = stock_quantity - customerQuantity;
+        connection.query(query, [item, customerQuantity], 
+          function(error, res) {
+            console.log(res.stock_quantity)
+            if (customerQuantity <= res.stock_quantity) {
+              res.stock_quantity = res.stock_quantity - customerQuantity;
+              console.log("Thanks for your order! Your total price is $" + quantity * res.price);
+              console.log(res.stock_quantity)
             }
             else {
-              console.log("Oh no, looks like our inventory is too low for you to buy " + chosenItem + ". We hope you are interested in buying our other fine aviation products.")
+              console.log("Oh no, looks like our inventory is too low for you to buy the " + item + ". We hope you are interested in buying our other fine aviation products.")
             }
           } 
         )
-      // 
-      //   // determine if bid was high enough
-      //   if (chosenItem.highest_bid < parseInt(answer.bid)) {
-      //     // bid was high enough, so update db, let the user know, and start over
-      //     connection.query(
-      //       "UPDATE auctions SET ? WHERE ?",
-      //       [
-      //         {
-      //           highest_bid: answer.bid
-      //         },
-      //         {
-      //           id: chosenItem.id
-      //         }
-      //       ],
-      //       function(error) {
-      //         if (error) throw err;
-      //         console.log("Bid placed successfully!");
-      //         start();
-      //       }
-      //     );
-      //   }
-      //   else {
-      //     // bid wasn't high enough, so apologize and start over
-      //     console.log("Your bid was too low. Try again...");
-      //     start();
-      //   }
-      // });
   });
-});
 }
-
 
