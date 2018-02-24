@@ -16,10 +16,10 @@ var inquirer = require("inquirer");
 var connection = mysql.createConnection({
   host: "localhost",
   port: 3306,
-
+  
   // Your username
   user: "root",
-
+  
   // Your password
   password: "password",
   database: "bamazon"
@@ -34,16 +34,100 @@ connection.connect(function(err) {
 
 // function which prompts the user for what action they should take
 function start() {
-  inquirer
-    .prompt({
-      name: "itemtobuy",
-      type: "rawlist",
-      message: "What is the ID of the product you want to buy?",
-      choices: [1,2,3,4,5,6,7,8,9,10,11]
-    })
-    .then(function(answer) {
-      // based on their answer, either call the bid or the post functions
-console.log(answer.itemtobuy + " hello")
-    });
-        connection.end();
+  
+  // query the database for all items being auctioned
+  connection.query("SELECT * FROM products", function(err, results) {
+    if (err) throw err;
+    // once you have the items, prompt the user for which they'd like to bid on
+    inquirer
+    .prompt([
+      {
+        name: "choice",
+        type: "rawlist",
+        choices: function() {
+          var choiceArray = [];
+          for (var i = 0; i < results.length; i++) {
+            choiceArray.push(results[i].product_name);
+          }
+          return choiceArray;
+        },
+        message: "What is the ID of the product you want to buy?"
+      },
+      {
+        name: "quantity",
+        type: "input",
+        message: "How many do you want to buy?",
+        validate: function(value) {
+          var pass = value.match(/^[0-9]*$/g);
+          if (pass) {
+            return true;
+          }
+          return 'Please enter a valid quantity as a numeral';
+        }
+      }
+    ])
+      .then(function(answer) {
+        // get the information of the chosen item
+        var chosenItem;
+        for (var i = 0; i < results.length; i++) {
+          if (results[i].item_name === answer.choice) {
+            chosenItem = results[i];
+            console.log(results[i]);
+          }
+        }
+        var customerQuantity = answer.quantity;
+        console.log(customerQuantity);
+        console.log(answer);
+        
+        connection.query(
+          "SELECT ? FROM products WHERE ?", 
+          [
+            {
+              product_name: answer.choice
+            },
+            {
+              stock_quantity: customerQuantity
+            }
+          ],
+          function(error) {
+            if (error) throw err;
+            if (customerQuantity >= stock_quantity) {
+              stock_quantity = stock_quantity - customerQuantity;
+            }
+            else {
+              console.log("Oh no, looks like our inventory is too low for you to buy " + chosenItem + ". We hope you are interested in buying our other fine aviation products.")
+            }
+          } 
+        )
+      // 
+      //   // determine if bid was high enough
+      //   if (chosenItem.highest_bid < parseInt(answer.bid)) {
+      //     // bid was high enough, so update db, let the user know, and start over
+      //     connection.query(
+      //       "UPDATE auctions SET ? WHERE ?",
+      //       [
+      //         {
+      //           highest_bid: answer.bid
+      //         },
+      //         {
+      //           id: chosenItem.id
+      //         }
+      //       ],
+      //       function(error) {
+      //         if (error) throw err;
+      //         console.log("Bid placed successfully!");
+      //         start();
+      //       }
+      //     );
+      //   }
+      //   else {
+      //     // bid wasn't high enough, so apologize and start over
+      //     console.log("Your bid was too low. Try again...");
+      //     start();
+      //   }
+      // });
+  });
+});
 }
+
+
