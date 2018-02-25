@@ -11,6 +11,7 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 var Table = require("cli-table2");
+var numeral = require("numeral");
 
 
 // create the connection information for the sql database
@@ -36,17 +37,17 @@ connection.connect(function(err) {
 // function which prompts the user for what action they should take
 function displayProducts() {
   var query = "SELECT * FROM products";
-  connection.query(query, function(err, results) {
+  connection.query(query, function(error, results) {
     
     // instantiate 
     var table = new Table({
-      head: ["Item number", "Product", "Price", "Inventory"], 
-      colWidths: [15, 30, 15, 15]
+      head: ["Item number", "Product", "Price"], 
+      colWidths: [15, 30, 15]
     });
     
     for (var i = 0; i < results.length; i++) {
       table.push(
-        [results[i].item_id, results[i].product_name, "$" + results[i].price, results[i].stock_quantity]
+        [results[i].item_id, results[i].product_name, numeral(results[i].price).format("$0,0.00")]
       );
     }
     console.log("Here are the current products available");
@@ -68,15 +69,13 @@ function displayProducts() {
         else {
           buyProduct(results);
         }    
-        
-        
       });
     })
   }
   
   function buyProduct(results) {
     
-    // query the database for all items being auctioned
+    // query the database for all items
     inquirer
     .prompt([
       {
@@ -105,42 +104,66 @@ function displayProducts() {
       }
     ])
     .then(function(answer) {
-      // var item;
-      // // get the information of the chosen item
-      // for (var i = 0; i < results.length; i++) {
-      //   if (results[i].item_name === answer.choice) {
-      //   item = results[i];
-      //     console.log("hello " + results[i]);
-      //             console.log("item variable is " + item);
-      //   }
-      // }
+      
       var customerQuantity = answer.quantity;
+      var customerProduct = answer.choice;
       
-      
-      var query = "SELECT * FROM products WHERE item_id = ?";
-      // console.log(results.stock_quantity);
-      
-      connection.query(query, [answer.choice],
+      var query = "SELECT * FROM products WHERE product_name = ?";
+      connection.query(query, [customerProduct],
         function(error, results) {
           if (error) throw error;
-          console.log(results.stock_quantity)
-          if (customerQuantity <= results.stock_quantity) {
-            results.stock_quantity = results.stock_quantity - customerQuantity;
-            console.log("Thanks for your order! Your total price is $" + customerQuantity * results.price);
-            console.log(results.stock_quantity)
+          
+          if (customerQuantity <= results[0].stock_quantity) {
+            var newStockInventory = results[0].stock_quantity - customerQuantity;
+            updateInventoryStock(newStockInventory, customerProduct);
+            
+            var totalPrice = numeral(customerQuantity * results[0].price).format("$0,0.00");
+            console.log("Thanks for your order! Your total price is " + totalPrice);
           }
           else {
-            console.log("Oh no, looks like our inventory is too low for you to buy the " + answer.choice + ". We hope you are interested in buying our other fine aviation products.")
+            //TODO: this is not working if you say Yes to buy something else. It hangs.
+            console.log("Oh no, looks like our inventory is too low for you to buy the " + customerProduct + ". We hope you are interested in our other fine aviation products.")
+            
           }
         } 
       )
-      
+      // var anythingElse = buyAnotherProduct();
+      // if (anythingElse) {
+      //   console.log("hello");
+      //   buyProduct(results);
+      // } 
+      // else {
+      //   console.log("Thanks for visiting the store. Come back again soon!");
+      //   connection.end();
+      // }
     });
   }
   
-  // function endShopping(answer) {
-  //   if (!answer.asktobuy) {
-  //     console.log("Thanks for visiting the store. Come back again soon!");
-  //     return;
-  //   }
-  // }
+  // function to subtract the number of items a customer ordered from the current inventory total in the database
+  function updateInventoryStock(inventory, product) {
+    var query = "UPDATE products SET stock_quantity = ? WHERE product_name = ?";
+    connection.query(query, [inventory, product],
+      function(error, results) {
+        if (error) throw error;
+        console.log(results.affectedRows + " updated!\n");
+      }
+    );
+  }
+  
+  // function to determine whether a customer wants to continue buying products
+  function buyAnotherProduct() {
+    
+    inquirer
+    .prompt([
+      {
+        name: "buyanythingelse",
+        type: "confirm",
+        message: "Do you want to buy anything else today?",            
+      }])
+      .then(function(answer) {
+        if (answer.buyanythingelse) {
+          return true;
+        } 
+      });
+    }
+    
