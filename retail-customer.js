@@ -30,14 +30,14 @@ connection.query(query, function(error, results) {
   
   // set up the cli-table2 columns and headings
   var table = new Table({
-    head: ["Item number", "Product", "Price"], 
-    colWidths: [15, 30, 15]
+    head: ["Item number", "Product", "Department", "Number in Stock", "Price"], 
+    colWidths: [15, 30, 30, 15, 15]
   });
   
   // populate the cli-table2 and use numeral.js to format into currency values
   for (var i = 0; i < results.length; i++) {
     table.push(
-      [results[i].item_id, results[i].product_name, numeral(results[i].price).format("$0,0.00")]
+      [results[i].item_id, results[i].product_name, results[i].department_name, results[i].stock_quantity, numeral(results[i].price).format("$0,0.00")]
     );
   }
   
