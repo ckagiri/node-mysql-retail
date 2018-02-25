@@ -40,25 +40,44 @@ function displayProducts() {
     
     // instantiate 
     var table = new Table({
-      head: ["Item number", "Product", "Price"], 
-      colWidths: [15, 30, 15]
+      head: ["Item number", "Product", "Price", "Inventory"], 
+      colWidths: [15, 30, 15, 15]
     });
     
     for (var i = 0; i < results.length; i++) {
       table.push(
-        [results[i].item_id, results[i].product_name, "$" + results[i].price]
+        [results[i].item_id, results[i].product_name, "$" + results[i].price, results[i].stock_quantity]
       );
     }
-    
+    console.log("Here are the current products available");
     console.log(table.toString());
     
-  });
-}
-
-function start() {
+    inquirer
+    .prompt([
+      {
+        name: "asktobuy",
+        type: "confirm",
+        message: "Do you want to buy anything today?",            
+      }])
+      .then(function(answer) {
+        if (!answer.asktobuy) {
+          console.log("Thanks for visiting the store. Come back again soon!");
+          connection.end();
+          return;
+        }
+        else {
+          buyProduct(results);
+        }    
+        
+        
+      });
+    })
+  }
   
-  // query the database for all items being auctioned
-inquirer
+  function buyProduct(results) {
+    
+    // query the database for all items being auctioned
+    inquirer
     .prompt([
       {
         name: "choice",
@@ -85,35 +104,43 @@ inquirer
         }
       }
     ])
-      .then(function(answer) {
-        // get the information of the chosen item
-        var chosenItem;
-        for (var i = 0; i < results.length; i++) {
-          if (results[i].item_name === answer.choice) {
-            chosenItem = results[i];
-            console.log(results[i]);
+    .then(function(answer) {
+      // var item;
+      // // get the information of the chosen item
+      // for (var i = 0; i < results.length; i++) {
+      //   if (results[i].item_name === answer.choice) {
+      //   item = results[i];
+      //     console.log("hello " + results[i]);
+      //             console.log("item variable is " + item);
+      //   }
+      // }
+      var customerQuantity = answer.quantity;
+      
+      
+      var query = "SELECT * FROM products WHERE item_id = ?";
+      // console.log(results.stock_quantity);
+      
+      connection.query(query, [answer.choice],
+        function(error, results) {
+          if (error) throw error;
+          console.log(results.stock_quantity)
+          if (customerQuantity <= results.stock_quantity) {
+            results.stock_quantity = results.stock_quantity - customerQuantity;
+            console.log("Thanks for your order! Your total price is $" + customerQuantity * results.price);
+            console.log(results.stock_quantity)
           }
-        }
-        var customerQuantity = answer.quantity;
-        console.log(customerQuantity);
-        console.log(answer);
-
-        var item = answer.choice;
-        var query = "SELECT * FROM products WHERE ?"
-        
-        connection.query(query, [item, customerQuantity], 
-          function(error, res) {
-            console.log(res.stock_quantity)
-            if (customerQuantity <= res.stock_quantity) {
-              res.stock_quantity = res.stock_quantity - customerQuantity;
-              console.log("Thanks for your order! Your total price is $" + quantity * res.price);
-              console.log(res.stock_quantity)
-            }
-            else {
-              console.log("Oh no, looks like our inventory is too low for you to buy the " + item + ". We hope you are interested in buying our other fine aviation products.")
-            }
-          } 
-        )
-  });
-}
-
+          else {
+            console.log("Oh no, looks like our inventory is too low for you to buy the " + answer.choice + ". We hope you are interested in buying our other fine aviation products.")
+          }
+        } 
+      )
+      
+    });
+  }
+  
+  // function endShopping(answer) {
+  //   if (!answer.asktobuy) {
+  //     console.log("Thanks for visiting the store. Come back again soon!");
+  //     return;
+  //   }
+  // }
