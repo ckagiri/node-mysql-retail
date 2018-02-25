@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/rmglennon/node-mysql-retail#readme",
   "dependencies": {
+    "chalk": "^2.3.1",
     "cli-table": "^0.3.1",
     "cli-table2": "^0.2.0",
     "inquirer": "^5.1.0",
