@@ -10,6 +10,9 @@ These must be installed to access the store:
 
 - [Node.js](https://nodejs.org/en/)
 - [npm](https://www.npmjs.com/get-npm)
+- [MySQL](https://www.mysql.com/)
+
+You need to make your own copy of the MySQL database to run this app. Use `retail-seeds.sql` to create an initial database. Then, in `retail-customer.js`, enter the connection information and credentials to your database.
 
 ## Enter the store
 
