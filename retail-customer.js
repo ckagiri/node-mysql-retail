@@ -50,7 +50,7 @@ function displayProducts() {
         [results[i].item_id, results[i].product_name, numeral(results[i].price).format("$0,0.00")]
       );
     }
-    console.log("Here are the current products available");
+    console.log("Welcome to the Airplane Store! \nHere are the current products available. \nFollow the prompts to purchase, or press the Q key to leave the store.");
     console.log(table.toString());
     
     inquirer
@@ -78,17 +78,18 @@ function displayProducts() {
     // query the database for all items
     inquirer
     .prompt([
+      // TODO: add input validation to make sure ID is less than total number of products
       {
         name: "choice",
-        type: "rawlist",
-        choices: function() {
-          var choiceArray = [];
-          for (var i = 0; i < results.length; i++) {
-            choiceArray.push(results[i].product_name);
+        type: "input",
+        message: "What is the item number of the product you want to buy?",
+        validate: function(value) {
+          var pass = value.match(/^[0-9]*$/g);
+          if (pass) {
+            return true;
           }
-          return choiceArray;
-        },
-        message: "What is the ID of the product you want to buy?"
+          return 'Please enter a valid quantity as a numeral';
+        }
       },
       {
         name: "quantity",
@@ -105,10 +106,17 @@ function displayProducts() {
     ])
     .then(function(answer) {
       
+
+      
+      var query = "SELECT * FROM products WHERE item_id = ?";
+      
       var customerQuantity = answer.quantity;
       var customerProduct = answer.choice;
       
-      var query = "SELECT * FROM products WHERE product_name = ?";
+      var choiceArray = [];
+          for (var i = 0; i < results.length; i++) {
+            choiceArray.push(results[i].product_name);
+          }
       connection.query(query, [customerProduct],
         function(error, results) {
           if (error) throw error;
@@ -119,39 +127,33 @@ function displayProducts() {
             
             var totalPrice = numeral(customerQuantity * results[0].price).format("$0,0.00");
             console.log("Thanks for your order! Your total price is " + totalPrice);
+            
+            buyAnotherProduct(results);
           }
           else {
-            //TODO: this is not working if you say Yes to buy something else. It hangs.
-            console.log("Oh no, looks like our inventory is too low for you to buy the " + customerProduct + ". We hope you are interested in our other fine aviation products.")
+            //TODO: becomes undefined on second round through
+            console.log("Oh no, looks like our inventory is too low for you to buy the " + choiceArray[customerProduct - 1] + ". We hope you are interested in any of our other products.")
             
+            buyAnotherProduct(results);
           }
         } 
       )
-      // var anythingElse = buyAnotherProduct();
-      // if (anythingElse) {
-      //   console.log("hello");
-      //   buyProduct(results);
-      // } 
-      // else {
-      //   console.log("Thanks for visiting the store. Come back again soon!");
-      //   connection.end();
-      // }
     });
   }
   
   // function to subtract the number of items a customer ordered from the current inventory total in the database
   function updateInventoryStock(inventory, product) {
-    var query = "UPDATE products SET stock_quantity = ? WHERE product_name = ?";
+    var query = "UPDATE products SET stock_quantity = ? WHERE item_id = ?";
     connection.query(query, [inventory, product],
       function(error, results) {
         if (error) throw error;
-        console.log(results.affectedRows + " updated!\n");
+        console.log("quantity updated for " + results.affectedRows)
       }
     );
   }
   
   // function to determine whether a customer wants to continue buying products
-  function buyAnotherProduct() {
+  function buyAnotherProduct(results) {
     
     inquirer
     .prompt([
@@ -162,8 +164,12 @@ function displayProducts() {
       }])
       .then(function(answer) {
         if (answer.buyanythingelse) {
-          return true;
+          buyProduct(results);
         } 
+        else {
+          console.log("Thanks for visiting the store. Come back again soon!");
+          connection.end();
+        }
       });
     }
     
