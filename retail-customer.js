@@ -70,8 +70,11 @@ function buyProduct(results) {
       name: "choice",
       type: "input",
       message: "What is the item number of the product you want to buy?",
-      validate: function(value) {
-        if ((value >= 1) && (value <= 10)) {
+      validate: function(value) {  
+        if ((value === "q") || (value === "Q")) {
+          quit();
+        }
+        else if ((value >= 1) && (value <= 10)) {
           return true;
         }
         return "Make sure you entered a valid product number.";
@@ -82,6 +85,9 @@ function buyProduct(results) {
       type: "input",
       message: "How many do you want to buy?",
       validate: function(value) {
+        if ((value === "q") || (value === "Q")) {
+          quit();
+        }
         var pass = value.match(/^[0-9]*$/g);
         if (pass) {
           return true;
@@ -152,19 +158,28 @@ function buyAnotherProduct(results) {
     {
       name: "buyanythingelse",
       type: "confirm",
-      message: "Do you want to buy anything else today?",            
+      message: "Do you want to buy anything else today?",
+      validate: function(value) {
+        if ((value === "q") || (value === "Q")) {
+          quit();
+        }
+      }            
     }])
   .then(function(answer) {
     if (answer.buyanythingelse) {
       buyProduct(results);
     } 
     else {
-      console.log("\n----------------------------------------------------\n");
-      console.log(chalk.blue.bold("Thanks for visiting the store. Come back again soon!"));
-      console.log("\n----------------------------------------------------\n");
-      connection.end();
+      quit();
     }
   });
 }
-  
-    
+
+// function to quit the app
+function quit() {
+    console.log("\n \n----------------------------------------------------\n");
+    console.log(chalk.blue.bold("Thanks for visiting the store. Come back again soon!"));
+    console.log("\n----------------------------------------------------\n");
+    connection.end();
+    process.exit();
+}  

@@ -68,6 +68,7 @@ function promptManagerTask() {
         console.log(chalk.blue.bold("Thanks for updating the inventory. Enjoy your day!"));
         console.log("\n----------------------------------------------------\n");
         connection.end();
+        process.exit();
         break;
     }
   });
