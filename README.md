@@ -22,7 +22,7 @@ _Note: You may need to widen your terminal window to see the entire table proper
 
 As a customer, you can view information about available products and purchase items in stock.
 
-In a terminal window, navigate into the folder where you downloaded this app and type `node retail-customer.js`.
+In a terminal window, navigate into the folder where you downloaded this app, and type `npm install`. Then, type `node retail-customer.js`.
 
 ![Screen recording of buying products](customer-view.gif)
 
@@ -32,7 +32,7 @@ If there is enough inventory available in the store, you can buy the product and
 
 Unfortunately, if the store does not have enough of the item to fill your order, your purchase will be declined. 
 
-You can type `Q` to leave the store at any time.
+You can type `Q` to leave the store at any prompt.
 
 ### Update product information as a manager
 
