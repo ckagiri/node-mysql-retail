@@ -24,7 +24,7 @@ As a customer, you can view information about available products and purchase it
 
 In a terminal window, navigate into the folder where you downloaded this app, and type `npm install`. Then, type `node retail-customer.js`.
 
-![Screen recording of buying products](customer-view.gif)
+![Screen recording of buying products](images/customer-view.gif)
 
 You will see a table of the current products available for purchase, which represents the data stored in a MySQL database. Following the prompts, type the item number of the product you want to buy and the quantity. 
 
@@ -42,7 +42,7 @@ In a terminal window, navigate into the folder where you downloaded this app and
 
 Use the arrow keys to navigate the menu of administrative options.
 
-![Screen recording of managing products](manager-view.gif)
+![Screen recording of managing products](images/manager-view.gif)
 
 ## Technology
 
