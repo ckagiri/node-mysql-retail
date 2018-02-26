@@ -1,8 +1,8 @@
 {
   "name": "node-mysql-retail",
   "version": "1.0.0",
-  "description": "Command-line Node.js and MySQL app for tracking retail inventory",
-  "main": "bamazonCustomer.js",
+  "description": "This is a command-line Node.js and MySQL app for buying and tracking retail inventory for an aircraft parts and supplies store.",
+  "main": "retail-customer.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -19,7 +19,6 @@
   "homepage": "https://github.com/rmglennon/node-mysql-retail#readme",
   "dependencies": {
     "chalk": "^2.3.1",
-    "cli-table": "^0.3.1",
     "cli-table2": "^0.2.0",
     "inquirer": "^5.1.0",
     "mysql": "^2.15.0",
